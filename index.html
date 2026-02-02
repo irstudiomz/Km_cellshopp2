@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KM CellShopp | High-End Mobile</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg: #ffffff;
+            --glass: rgba(255, 255, 255, 0.25);
+            --border: rgba(255, 255, 255, 0.4);
+            --accent: #0071e3;
+            --orange: #ff8c00;
+            --text: #1d1d1f;
+            --subtext: #86868b;
+        }
+
+        body.dark-mode {
+            --bg: #000000;
+            --glass: rgba(28, 28, 30, 0.7);
+            --border: rgba(255, 255, 255, 0.1);
+            --text: #f5f5f7;
+            --subtext: #a1a1a6;
+            background: radial-gradient(circle at 20% 30%, #1a1a1a 0%, #000000 50%);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+            background: radial-gradient(circle at 20% 30%, #f0f4ff 0%, #ffffff 50%);
+            min-height: 100vh;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .liquid-blob {
+            position: fixed; width: 500px; height: 500px;
+            background: linear-gradient(135deg, #d4e0ff 0%, #e8f0ff 100%);
+            filter: blur(80px); border-radius: 45% 55% 70% 30% / 30% 60% 40% 70%;
+            z-index: -1; top: -10%; right: -10%; animation: liquid 20s infinite alternate;
+        }
+        
+        body.dark-mode .liquid-blob {
+            background: linear-gradient(135deg, #1e3a8a 0%, #000000 100%);
+            opacity: 0.4;
+        }
+
+        @keyframes liquid { from { transform: translate(0,0) rotate(0deg); } to { transform: translate(-10%, 15%) rotate(20deg); } }
+
+        .theme-toggle {
+            position: fixed; top: 20px; right: 20px; z-index: 15000;
+            background: var(--glass); border: 1px solid var(--border);
+            backdrop-filter: blur(10px); padding: 10px; border-radius: 50%;
+            cursor: pointer; color: var(--text); display: flex; align-items: center;
+        }
+
+        header { padding: 40px 20px; text-align: center; position: relative; }
+        .logo-img { height: 180px; margin-bottom: 5px; display: block; margin: 0 auto; object-fit: contain; }
+        .brand-logo { 
+            font-size: 0.7rem; 
+            font-weight: 600; 
+            letter-spacing: 1.5px; 
+            text-transform: uppercase; 
+            color: var(--text);
+            opacity: 0.6;
+        }
+
+        .cat-scroll {
+            display: flex; overflow-x: auto; gap: 10px; padding: 10px 20px;
+            scrollbar-width: none; -ms-overflow-style: none;
+        }
+        .cat-scroll::-webkit-scrollbar { display: none; }
+        .cat-item {
+            padding: 10px 25px; border-radius: 25px; 
+            background: var(--glass); 
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            color: var(--text);
+            white-space: nowrap; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .cat-item.active { background: var(--orange); color: white; border-color: var(--orange); }
+
+        .hero { text-align: center; padding: 10px 0 40px; }
+        .hero h1 { font-size: 2.4rem; font-weight: 800; letter-spacing: -1.5px; line-height: 1; color: var(--text); }
+        .hero span { display: block; font-size: 1.1rem; color: var(--subtext); margin-top: 8px; }
+
+        .container {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;
+            padding: 0 15px 120px; max-width: 600px; margin: 0 auto;
+        }
+
+        .glass-product {
+            background: var(--glass); backdrop-filter: blur(25px) saturate(180%);
+            border: 1px solid var(--border); border-radius: 35px;
+            padding: 20px 10px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.04);
+            transition: all 0.5s cubic-bezier(0.2, 1, 0.3, 1);
+            color: var(--text);
+        }
+
+        .image-wrapper img { 
+            max-width: 90%; height: 160px; object-fit: cover; 
+            border-radius: 20px; 
+            margin-bottom: 10px;
+        }
+
+        .mzn-price { font-size: 1.1rem; font-weight: 800; margin-bottom: 15px; display: block; }
+        .buy-btn { background: var(--text); color: var(--bg); padding: 10px 20px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; border: none; cursor: pointer; }
+
+        .ios-dock {
+            position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%);
+            background: var(--glass); backdrop-filter: blur(20px);
+            border: 1px solid var(--border); padding: 12px 30px;
+            border-radius: 35px; display: flex; gap: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); z-index: 10000;
+        }
+        .dock-item { color: var(--text); display: flex; flex-direction: column; align-items: center; cursor: pointer; position: relative; }
+        .dock-item span { font-size: 0.65rem; font-weight: 700; margin-top: 4px; }
+        
+        .cart-count {
+            position: absolute; top: -5px; right: -5px; background: var(--orange);
+            color: white; font-size: 0.6rem; padding: 2px 6px; border-radius: 10px;
+        }
+
+        .sheet { position: fixed; bottom: -100%; left: 0; width: 100%; background: var(--glass); backdrop-filter: blur(30px); border-radius: 35px 35px 0 0; padding: 25px; z-index: 11000; transition: bottom 0.5s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 -10px 20px rgba(0,0,0,0.1); color: var(--text); border-top: 1px solid var(--border); }
+        .sheet.active { bottom: 0; }
+        .close-bar { width: 45px; height: 5px; background: var(--subtext); border-radius: 10px; margin: 0 auto 20px; cursor: pointer; }
+        
+        .cart-item-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+
+        #admin-view { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 20000; padding: 20px 20px 100px; overflow-y: auto; color: var(--text); }
+        .order-row { background: var(--glass); padding: 15px; border-radius: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); }
+        .btn-del { background: #ff4444; color: white; padding: 8px 12px; border-radius: 8px; font-size: 0.7rem; border: none; cursor: pointer; }
+
+        input, textarea { width: 100%; padding: 14px; margin: 8px 0; border-radius: 15px; border: 1px solid var(--border); background: var(--bg); color: var(--text); outline: none; }
+        input:focus { border-color: var(--orange); }
+
+        body.blurred #main-ui { filter: blur(20px); pointer-events: none; }
+        
+        .admin-nav-bar {
+            position: fixed; bottom: 0; left: 0; width: 100%; 
+            background: var(--glass); backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border); padding: 15px;
+            display: flex; justify-content: space-around; z-index: 21000;
+        }
+    </style>
+</head>
+<body id="body">
+
+    <div class="theme-toggle" onclick="toggleTheme()">
+        <i data-lucide="moon" id="theme-icon"></i>
+    </div>
+
+    <div class="liquid-blob"></div>
+
+    <div id="main-ui">
+        <header>
+            <img id="mkt-logo-img" class="logo-img" src="https://via.placeholder.com/150x150?text=LOGO">
+            <div class="brand-logo" id="mkt-logo">Goddid Soluções</div>
+        </header>
+
+        <div class="cat-scroll" id="mkt-cats"></div>
+
+        <section class="hero">
+            <h1 id="mkt-title">Liquid Glass</h1>
+            <span id="mkt-slogan">iOS 26 Architecture</span>
+        </section>
+
+        <main class="container" id="product-list"></main>
+    </div>
+
+    <nav class="ios-dock">
+        <div class="dock-item" onclick="openWhatsAppSupport()"><i data-lucide="message-circle"></i><span>Suporte</span></div>
+        <div class="dock-item" onclick="openSheet('cart-sheet')">
+            <i data-lucide="shopping-cart"></i>
+            <span id="cart-badge" class="cart-count">0</span>
+            <span>Carrinho</span>
+        </div>
+        <div class="dock-item" onclick="openSheet('login-sheet')"><i data-lucide="user"></i><span>Restrito</span></div>
+    </nav>
+
+    <div class="sheet" id="cart-sheet" style="height: 70%; overflow-y: auto;">
+        <div class="close-bar" onclick="closeSheets()"></div>
+        <h3>Meu Carrinho</h3>
+        <div id="cart-items-container" style="margin-top: 20px;"></div>
+        <div id="cart-total" style="margin-top: 20px; font-weight: 800; font-size: 1.2rem; text-align: right;">Total: 0 MT</div>
+        <button class="buy-btn" style="width:100%; margin-top:20px; padding: 18px; background: var(--text); color: var(--bg);" onclick="goToCheckout()">Finalizar Compra</button>
+    </div>
+
+    <div class="sheet" id="checkout-sheet" style="height: 85%; overflow-y: auto;">
+        <div class="close-bar" onclick="closeSheets()"></div>
+        <h3>Dados de Entrega</h3>
+        <p style="font-size: 0.8rem; color: var(--subtext); margin-bottom: 10px;">Preencha para concluir via WhatsApp</p>
+        <input type="text" id="cust-name" placeholder="Seu Nome Completo">
+        <input type="text" id="cust-phone" placeholder="Telefone / WhatsApp">
+        <input type="text" id="cust-address" placeholder="Bairro, Rua e Casa">
+        <textarea id="cust-notes" placeholder="Ponto de Referência ou Cor do Item" style="height: 80px;"></textarea>
+        <button class="buy-btn" style="width:100%; margin-top:15px; padding: 18px; background: var(--orange); color: white;" onclick="confirmOrder()">Confirmar Pedido</button>
+    </div>
+
+    <div class="sheet" id="login-sheet" style="height: 40%;">
+        <div class="close-bar" onclick="closeSheets()"></div>
+        <h3>Acesso Restrito</h3>
+        <input type="text" id="adm-user" placeholder="Usuário">
+        <input type="password" id="adm-pass" placeholder="Senha">
+        <button class="buy-btn" style="width:100%; margin-top:15px;" onclick="login()">Entrar no Painel</button>
+    </div>
+
+    <div id="admin-view">
+        <div style="display:flex; justify-content:space-between; align-items:center; background: var(--glass); padding: 15px; border-radius: 20px; margin-bottom: 20px; border: 1px solid var(--border); backdrop-filter: blur(10px);">
+            <div>
+                <div id="admin-clock" style="font-size: 1.3rem; font-weight: 800; letter-spacing: -1px;">00:00:00</div>
+                <div style="font-size: 0.6rem; text-transform: uppercase; opacity: 0.6; font-weight: 700;">Maputo, Moçambique</div>
+            </div>
+            <button class="buy-btn" style="background: #ff4444; padding: 10px 15px; border-radius: 15px;" onclick="closeAdmin()">
+                <i data-lucide="log-out" style="width: 18px; height: 18px; color: white;"></i>
+            </button>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+            <div style="background: var(--glass); padding: 15px; border-radius: 20px; border: 1px solid var(--border);">
+                <span style="font-size: 0.6rem; font-weight: 700; opacity: 0.6;">PRODUTOS</span>
+                <div id="stat-prod-count" style="font-size: 1.4rem; font-weight: 800;">0</div>
+            </div>
+            <div style="background: var(--glass); padding: 15px; border-radius: 20px; border: 1px solid var(--border);">
+                <span style="font-size: 0.6rem; font-weight: 700; opacity: 0.6;">CATEGORIAS</span>
+                <div id="stat-cat-count" style="font-size: 1.4rem; font-weight: 800;">0</div>
+            </div>
+        </div>
+
+        <div id="tab-produtos" class="admin-tab">
+            <h4 style="margin-bottom:10px;">Novo Produto</h4>
+            <div style="background: var(--glass); padding: 15px; border-radius: 20px; margin-bottom: 20px; border: 1px solid var(--border);">
+                <input type="text" id="new-p-name" placeholder="Nome do Produto">
+                <input type="text" id="new-p-price" placeholder="Preço (ex: 85.000 MT)">
+                <input type="text" id="new-p-cat" placeholder="Categoria">
+                <input type="file" id="new-p-file" accept="image/*" style="padding: 10px; font-size: 0.7rem;">
+                <button class="buy-btn" style="width:100%; margin-top: 10px; background: var(--text); color: var(--bg);" onclick="addProduct()">Salvar Produto</button>
+            </div>
+            
+            <h4 style="margin-bottom:10px;">Gerenciar Categorias</h4>
+            <div id="admin-category-list" style="margin-bottom: 20px;"></div>
+
+            <h4 style="margin-bottom:10px;">Lista de Itens</h4>
+            <div id="admin-product-list"></div>
+        </div>
+
+        <div id="tab-perfil" class="admin-tab" style="display:none;">
+            <h4 style="margin-bottom:10px;">Configurações da Loja</h4>
+            <div style="background: var(--glass); padding: 15px; border-radius: 20px; border: 1px solid var(--border);">
+                <input type="text" id="cfg-logo" placeholder="Nome da Empresa">
+                <input type="text" id="cfg-title" placeholder="Título Principal">
+                <input type="text" id="cfg-slogan" placeholder="Slogan">
+                <label style="font-size: 0.7rem; margin-top: 10px; display: block;">Alterar Logo (Img)</label>
+                <input type="file" id="cfg-file" accept="image/*">
+                <button class="buy-btn" style="width:100%; margin-top: 15px;" onclick="saveSettings()">Aplicar Alterações</button>
+            </div>
+        </div>
+
+        <div id="tab-historico" class="admin-tab" style="display:none;">
+            <h4 style="margin-bottom:10px;">Histórico de Pedidos</h4>
+            <div id="admin-history-list"></div>
+            <button class="buy-btn" style="width:100%; background:#ff4444; margin-top:20px;" onclick="clearHistory()">Limpar Histórico</button>
+        </div>
+
+        <div class="admin-nav-bar">
+            <div class="dock-item" onclick="switchAdminTab('produtos', this)"><i data-lucide="package"></i><span style="font-size:0.6rem;">Produtos</span></div>
+            <div class="dock-item" onclick="switchAdminTab('historico', this)"><i data-lucide="history"></i><span style="font-size:0.6rem;">Histórico</span></div>
+            <div class="dock-item" onclick="switchAdminTab('perfil', this)"><i data-lucide="settings"></i><span style="font-size:0.6rem;">Perfil</span></div>
+        </div>
+    </div>
+
+    <script>
+        // --- SISTEMA ANTI-ERRO GLOBAL ---
+        window.onerror = function(msg, url, line) { return true; };
+        window.onunhandledrejection = function(event) { return true; };
+        try { localStorage.getItem('test'); } catch (e) { console.warn("Storage inativo"); }
+
+        lucide.createIcons();
+
+        let cart = [];
+        let products = JSON.parse(localStorage.getItem('goddid_products')) || [
+            { id: 1, name: 'iPhone 15 Pro', price: '85.900 MT', cat: 'iPhones', img: '', stock: true }
+        ];
+        let settings = JSON.parse(localStorage.getItem('goddid_settings')) || { title: 'Liquid Glass', slogan: 'iOS 26 Architecture', logo: 'Goddid Soluções', logoImg: '' };
+        let history = JSON.parse(localStorage.getItem('goddid_history')) || [];
+
+        let currentProductImg = "";
+        let currentLogoImg = settings.logoImg;
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const icon = document.getElementById('theme-icon');
+            icon.setAttribute('data-lucide', document.body.classList.contains('dark-mode') ? 'sun' : 'moon');
+            lucide.createIcons();
+            localStorage.setItem('goddid_theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+        }
+
+        if(localStorage.getItem('goddid_theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+            document.getElementById('theme-icon').setAttribute('data-lucide', 'sun');
+            lucide.createIcons();
+        }
+
+        function renderMarketplace(filteredCat = 'Todos') {
+            const list = document.getElementById('product-list');
+            if(!list) return;
+            list.innerHTML = '';
+            const displayProds = filteredCat === 'Todos' ? products : products.filter(p => p.cat === filteredCat);
+
+            displayProds.forEach(p => {
+                list.innerHTML += `
+                    <div class="glass-product">
+                        <div class="image-wrapper"><img src="${p.img || 'https://via.placeholder.com/150'}"></div>
+                        <h2 style="font-size: 0.9rem;">${p.name}</h2>
+                        <span class="mzn-price">${p.price}</span>
+                        <button class="buy-btn" onclick="addToCart(${p.id})">Adicionar</button>
+                    </div>`;
+            });
+
+            const uniqueCats = ['Todos', ...new Set(products.map(p => p.cat))];
+            document.getElementById('mkt-cats').innerHTML = uniqueCats.map(c => `
+                <button class="cat-item ${filteredCat === c ? 'active' : ''}" onclick="renderMarketplace('${c}')">${c}</button>
+            `).join('');
+            
+            document.getElementById('mkt-logo').innerText = settings.logo;
+            document.getElementById('mkt-title').innerText = settings.title;
+            document.getElementById('mkt-slogan').innerText = settings.slogan;
+            if(settings.logoImg) document.getElementById('mkt-logo-img').src = settings.logoImg;
+            updateDashboardStats();
+        }
+
+        function addToCart(id) {
+            const prod = products.find(p => p.id == id);
+            if(prod) {
+                cart.push(prod);
+                updateCartUI();
+            }
+        }
+
+        function updateCartUI() {
+            const container = document.getElementById('cart-items-container');
+            const badge = document.getElementById('cart-badge');
+            badge.innerText = cart.length;
+            
+            container.innerHTML = cart.map((item, index) => `
+                <div class="cart-item-row">
+                    <span>${item.name}</span>
+                    <span style="font-weight:700;">${item.price}</span>
+                    <i data-lucide="trash-2" size="16" onclick="removeFromCart(${index})" style="color:#ff4444; cursor:pointer;"></i>
+                </div>
+            `).join('');
+            
+            document.getElementById('cart-total').innerText = `Subtotal: ${cart.length} item(s)`;
+            lucide.createIcons();
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            updateCartUI();
+        }
+
+        function goToCheckout() {
+            if(cart.length === 0) return alert("Adicione produtos primeiro!");
+            closeSheets();
+            openSheet('checkout-sheet');
+        }
+
+        function confirmOrder() {
+            const name = document.getElementById('cust-name').value;
+            const phone = document.getElementById('cust-phone').value;
+            const addr = document.getElementById('cust-address').value;
+            const notes = document.getElementById('cust-notes').value;
+
+            if(!name || !phone || !addr) return alert("Preencha os dados de entrega.");
+
+            const orderData = { 
+                id: Date.now(), 
+                date: new Date().toLocaleString(), 
+                customer: name, 
+                phone: phone,
+                address: addr,
+                notes: notes,
+                items: [...cart] 
+            };
+            
+            history.push(orderData);
+            localStorage.setItem('goddid_history', JSON.stringify(history));
+
+            let itensTexto = cart.map(i => `- ${i.name} (${i.price})`).join('%0A');
+            const msg = `🚀 *NOVO PEDIDO - GODDID*%0A%0A*PRODUTOS:*%0A${itensTexto}%0A%0A*ENTREGA:*%0A*Nome:* ${name}%0A*Telefone:* ${phone}%0A*Endereço:* ${addr}%0A*Notas:* ${notes}`;
+            
+            window.location.href = `https://wa.me/258845478417?text=${msg}`; 
+
+            cart = [];
+            updateCartUI();
+            closeSheets();
+        }
+
+        function updateDashboardStats() {
+            const prodCount = document.getElementById('stat-prod-count');
+            const catCount = document.getElementById('stat-cat-count');
+            if(prodCount) prodCount.innerText = products.length;
+            if(catCount) {
+                const uniqueCats = [...new Set(products.map(p => p.cat))];
+                catCount.innerText = uniqueCats.length;
+            }
+        }
+
+        function startClock() {
+            setInterval(() => {
+                const now = new Date();
+                const clockEl = document.getElementById('admin-clock');
+                if(clockEl) clockEl.innerText = now.toLocaleTimeString('pt-PT', { hour12: false });
+            }, 1000);
+        }
+
+        document.getElementById('new-p-file').addEventListener('change', function(e) {
+            if(!e.target.files[0]) return;
+            const reader = new FileReader();
+            reader.onload = () => currentProductImg = reader.result;
+            reader.readAsDataURL(e.target.files[0]);
+        });
+
+        document.getElementById('cfg-file').addEventListener('change', function(e) {
+            if(!e.target.files[0]) return;
+            const reader = new FileReader();
+            reader.onload = () => currentLogoImg = reader.result;
+            reader.readAsDataURL(e.target.files[0]);
+        });
+
+        function addProduct() {
+            const name = document.getElementById('new-p-name').value;
+            const price = document.getElementById('new-p-price').value;
+            const cat = document.getElementById('new-p-cat').value || 'Geral';
+            if(!name || !price) return alert("Preencha o nome e preço!");
+            products.push({ id: Date.now(), name, price, cat, img: currentProductImg, stock: true });
+            localStorage.setItem('goddid_products', JSON.stringify(products));
+            renderAdminProducts(); renderMarketplace(); renderAdminCategories();
+            alert("Sucesso!");
+        }
+
+        function renderAdminProducts() {
+            document.getElementById('admin-product-list').innerHTML = products.map(p => `
+                <div class="order-row">
+                    <span style="font-size:0.8rem;">${p.name} <br><small>${p.cat}</small></span>
+                    <button class="btn-del" onclick="deleteProduct(${p.id})">Apagar</button>
+                </div>
+            `).join('');
+            updateDashboardStats();
+        }
+
+        function renderAdminCategories() {
+            const uniqueCats = [...new Set(products.map(p => p.cat))].filter(c => c !== 'Geral');
+            document.getElementById('admin-category-list').innerHTML = uniqueCats.map(c => `
+                <div class="order-row">
+                    <span style="font-size:0.8rem;">${c}</span>
+                    <button class="btn-del" onclick="deleteCategory('${c}')">Remover Cat</button>
+                </div>
+            `).join('');
+        }
+
+        function deleteCategory(catName) {
+            if(confirm(`Remover a categoria "${catName}"? Os produtos ficarão como "Geral".`)) {
+                products = products.map(p => {
+                    if(p.cat === catName) p.cat = 'Geral';
+                    return p;
+                });
+                localStorage.setItem('goddid_products', JSON.stringify(products));
+                renderAdminProducts(); renderMarketplace(); renderAdminCategories();
+            }
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('admin-history-list');
+            container.innerHTML = history.length ? history.map(h => `
+                <div class="order-row" style="flex-direction:column; align-items:flex-start; gap: 5px;">
+                    <div style="display:flex; justify-content:space-between; width:100%;">
+                         <span style="font-size:0.7rem; opacity:0.6;">${h.date}</span>
+                         <span style="font-size:0.7rem; font-weight:800; color:var(--orange);">${h.phone}</span>
+                    </div>
+                    <span style="font-weight:700; font-size: 0.9rem;">${h.customer}</span>
+                    <span style="font-size:0.75rem;">📍 ${h.address}</span>
+                    <span style="font-size:0.75rem; opacity:0.8;">📝 ${h.notes || 'Sem notas'}</span>
+                    <div style="margin-top:5px; padding-top:5px; border-top:1px solid var(--border); width:100%; font-size:0.7rem;">
+                        ${h.items.map(i => `• ${i.name} (${i.price})`).join('<br>')}
+                    </div>
+                </div>
+            `).reverse().join('') : '<p style="text-align:center; opacity:0.5;">Nenhum pedido ainda.</p>';
+        }
+
+        function clearHistory() { if(confirm("Apagar tudo?")) { history = []; localStorage.setItem('goddid_history', JSON.stringify(history)); renderHistory(); } }
+
+        function deleteProduct(id) {
+            products = products.filter(p => p.id !== id);
+            localStorage.setItem('goddid_products', JSON.stringify(products));
+            renderAdminProducts(); renderMarketplace(); renderAdminCategories();
+        }
+
+        function saveSettings() {
+            settings = { logo: document.getElementById('cfg-logo').value, title: document.getElementById('cfg-title').value, slogan: document.getElementById('cfg-slogan').value, logoImg: currentLogoImg };
+            localStorage.setItem('goddid_settings', JSON.stringify(settings));
+            renderMarketplace(); alert("Salvo!");
+        }
+
+        function login() {
+            if(document.getElementById('adm-user').value === '84 547 8417' && document.getElementById('adm-pass').value === 'admin123moz') {
+                document.getElementById('admin-view').style.display = 'block';
+                renderAdminProducts(); renderAdminCategories(); renderHistory();
+                closeSheets(); startClock();
+            } else alert("Erro!");
+        }
+
+        function switchAdminTab(tab, btn) {
+            document.querySelectorAll('.admin-tab').forEach(t => t.style.display = 'none');
+            const el = document.getElementById('tab-' + tab);
+            if(el) el.style.display = 'block';
+            if(tab === 'historico') renderHistory();
+            if(tab === 'produtos') renderAdminCategories();
+        }
+
+        function closeAdmin() { document.getElementById('admin-view').style.display = 'none'; }
+        function openSheet(id) { document.getElementById('body').classList.add('blurred'); document.getElementById(id).classList.add('active'); }
+        function closeSheets() { document.getElementById('body').classList.remove('blurred'); document.querySelectorAll('.sheet').forEach(s => s.classList.remove('active')); }
+        
+        function openWhatsAppSupport() { 
+            window.location.href = 'https://wa.me/258845478417'; 
+        }
+
+        window.onload = () => {
+            renderMarketplace();
+            document.getElementById('cfg-logo').value = settings.logo;
+            document.getElementById('cfg-title').value = settings.title;
+            document.getElementById('cfg-slogan').value = settings.slogan;
+        };
+    </script>
+
+    <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            const swCode = `
+                const CACHE_NAME = 'km-cell-v2';
+                const ASSETS = ['${window.location.href}', 'https://unpkg.com/lucide@latest'];
+                self.addEventListener('install', e => e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(ASSETS))));
+                self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));
+            `;
+            const blob = new Blob([swCode], { type: 'application/javascript' });
+            navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(() => {});
+        });
+    }
+    </script>
+</body>
+</html>
