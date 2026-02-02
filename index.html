@@ -145,6 +145,7 @@
             border-top: 1px solid var(--border); padding: 15px;
             display: flex; justify-content: space-around; z-index: 21000;
         }
+        .admin-tab { display: none; }
     </style>
 </head>
 <body id="body">
@@ -158,7 +159,7 @@
     <div id="main-ui">
         <header>
             <img id="mkt-logo-img" class="logo-img" src="https://via.placeholder.com/150x150?text=LOGO">
-            <div class="brand-logo" id="mkt-logo">Goddid Soluções</div>
+            <div class="brand-logo" id="mkt-logo">Carregando...</div>
         </header>
 
         <div class="cat-scroll" id="mkt-cats"></div>
@@ -203,7 +204,7 @@
     <div class="sheet" id="login-sheet" style="height: 40%;">
         <div class="close-bar" onclick="closeSheets()"></div>
         <h3>Acesso Restrito</h3>
-        <input type="text" id="adm-user" placeholder="Usuário">
+        <input type="text" id="adm-user" placeholder="E-mail (kmcellshopp@gmail.com)">
         <input type="password" id="adm-pass" placeholder="Senha">
         <button class="buy-btn" style="width:100%; margin-top:15px;" onclick="login()">Entrar no Painel</button>
     </div>
@@ -230,326 +231,264 @@
             </div>
         </div>
 
-        <div id="tab-produtos" class="admin-tab">
+        <div id="tab-produtos" class="admin-tab" style="display:block;">
             <h4 style="margin-bottom:10px;">Novo Produto</h4>
             <div style="background: var(--glass); padding: 15px; border-radius: 20px; margin-bottom: 20px; border: 1px solid var(--border);">
                 <input type="text" id="new-p-name" placeholder="Nome do Produto">
                 <input type="text" id="new-p-price" placeholder="Preço (ex: 85.000 MT)">
                 <input type="text" id="new-p-cat" placeholder="Categoria">
                 <input type="file" id="new-p-file" accept="image/*" style="padding: 10px; font-size: 0.7rem;">
-                <button class="buy-btn" style="width:100%; margin-top: 10px; background: var(--text); color: var(--bg);" onclick="addProduct()">Salvar Produto</button>
+                <button class="buy-btn" style="width:100%; margin-top: 10px;" onclick="addProduct()">Salvar Produto</button>
             </div>
-            
-            <h4 style="margin-bottom:10px;">Gerenciar Categorias</h4>
-            <div id="admin-category-list" style="margin-bottom: 20px;"></div>
-
-            <h4 style="margin-bottom:10px;">Lista de Itens</h4>
             <div id="admin-product-list"></div>
         </div>
 
-        <div id="tab-perfil" class="admin-tab" style="display:none;">
+        <div id="tab-perfil" class="admin-tab">
             <h4 style="margin-bottom:10px;">Configurações da Loja</h4>
-            <div style="background: var(--glass); padding: 15px; border-radius: 20px; border: 1px solid var(--border);">
-                <input type="text" id="cfg-logo" placeholder="Nome da Empresa">
-                <input type="text" id="cfg-title" placeholder="Título Principal">
-                <input type="text" id="cfg-slogan" placeholder="Slogan">
-                <label style="font-size: 0.7rem; margin-top: 10px; display: block;">Alterar Logo (Img)</label>
-                <input type="file" id="cfg-file" accept="image/*">
-                <button class="buy-btn" style="width:100%; margin-top: 15px;" onclick="saveSettings()">Aplicar Alterações</button>
-            </div>
+            <input type="text" id="cfg-logo" placeholder="Nome da Empresa">
+            <input type="text" id="cfg-title" placeholder="Título Principal">
+            <input type="text" id="cfg-slogan" placeholder="Slogan">
+            <input type="file" id="cfg-file" accept="image/*">
+            <button class="buy-btn" style="width:100%; margin-top: 15px;" onclick="saveSettings()">Aplicar Alterações</button>
         </div>
 
-        <div id="tab-historico" class="admin-tab" style="display:none;">
+        <div id="tab-historico" class="admin-tab">
             <h4 style="margin-bottom:10px;">Histórico de Pedidos</h4>
             <div id="admin-history-list"></div>
-            <button class="buy-btn" style="width:100%; background:#ff4444; margin-top:20px;" onclick="clearHistory()">Limpar Histórico</button>
         </div>
 
         <div class="admin-nav-bar">
-            <div class="dock-item" onclick="switchAdminTab('produtos', this)"><i data-lucide="package"></i><span style="font-size:0.6rem;">Produtos</span></div>
-            <div class="dock-item" onclick="switchAdminTab('historico', this)"><i data-lucide="history"></i><span style="font-size:0.6rem;">Histórico</span></div>
-            <div class="dock-item" onclick="switchAdminTab('perfil', this)"><i data-lucide="settings"></i><span style="font-size:0.6rem;">Perfil</span></div>
+            <div class="dock-item" onclick="switchAdminTab('produtos')"><i data-lucide="package"></i><span>Produtos</span></div>
+            <div class="dock-item" onclick="switchAdminTab('historico')"><i data-lucide="history"></i><span>Pedidos</span></div>
+            <div class="dock-item" onclick="switchAdminTab('perfil')"><i data-lucide="settings"></i><span>Loja</span></div>
         </div>
     </div>
 
-    <script>
-        // --- SISTEMA ANTI-ERRO GLOBAL ---
-        window.onerror = function(msg, url, line) { return true; };
-        window.onunhandledrejection = function(event) { return true; };
-        try { localStorage.getItem('test'); } catch (e) { console.warn("Storage inativo"); }
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, setDoc, deleteDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        lucide.createIcons();
+        const firebaseConfig = {
+            apiKey: "AIzaSyDZAugsYnhFAEYPeYZ63ZX_zslfT5zi6Bk",
+            authDomain: "kmcellshopp-7f9de.firebaseapp.com",
+            projectId: "kmcellshopp-7f9de",
+            storageBucket: "kmcellshopp-7f9de.firebasestorage.app",
+            messagingSenderId: "308485504107",
+            appId: "1:308485504107:web:99dbca7944e682a710852e",
+            measurementId: "G-X9RVT0M8W1"
+        };
 
-        let cart = [];
-        let products = JSON.parse(localStorage.getItem('goddid_products')) || [
-            { id: 1, name: 'iPhone 15 Pro', price: '85.900 MT', cat: 'iPhones', img: '', stock: true }
-        ];
-        let settings = JSON.parse(localStorage.getItem('goddid_settings')) || { title: 'Liquid Glass', slogan: 'iOS 26 Architecture', logo: 'Goddid Soluções', logoImg: '' };
-        let history = JSON.parse(localStorage.getItem('goddid_history')) || [];
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-        let currentProductImg = "";
-        let currentLogoImg = settings.logoImg;
+        // Global Variables
+        window.cart = [];
+        window.products = [];
+        window.historyData = [];
+        window.settings = { title: 'Liquid Glass', slogan: 'iOS 26 Architecture', logo: 'Goddid Soluções', logoImg: '' };
+        window.currentProductImg = "";
+        window.currentLogoImg = "";
 
-        function toggleTheme() {
-            document.body.classList.toggle('dark-mode');
-            const icon = document.getElementById('theme-icon');
-            icon.setAttribute('data-lucide', document.body.classList.contains('dark-mode') ? 'sun' : 'moon');
-            lucide.createIcons();
-            localStorage.setItem('goddid_theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
-        }
+        // Sync Products
+        onSnapshot(collection(db, "products"), (snapshot) => {
+            window.products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderMarketplace();
+            renderAdminProducts();
+        });
 
-        if(localStorage.getItem('goddid_theme') === 'dark') {
-            document.body.classList.add('dark-mode');
-            document.getElementById('theme-icon').setAttribute('data-lucide', 'sun');
-            lucide.createIcons();
-        }
+        // Sync Settings
+        onSnapshot(doc(db, "settings", "main"), (docSnap) => {
+            if (docSnap.exists()) {
+                window.settings = docSnap.data();
+                applySettings();
+            }
+        });
 
-        function renderMarketplace(filteredCat = 'Todos') {
+        // Sync Orders
+        onSnapshot(query(collection(db, "orders"), orderBy("timestamp", "desc")), (snapshot) => {
+            window.historyData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderHistory();
+        });
+
+        window.addProduct = async () => {
+            const name = document.getElementById('new-p-name').value;
+            const price = document.getElementById('new-p-price').value;
+            const cat = document.getElementById('new-p-cat').value || 'Geral';
+            if(!name || !price) return alert("Preencha os campos!");
+            try {
+                await addDoc(collection(db, "products"), {
+                    name, price, cat, 
+                    img: window.currentProductImg || "", 
+                    timestamp: serverTimestamp()
+                });
+                alert("Produto Adicionado!");
+                document.getElementById('new-p-name').value = "";
+                document.getElementById('new-p-price').value = "";
+            } catch (e) { alert("Erro: " + e); }
+        };
+
+        window.deleteProduct = async (id) => {
+            if(confirm("Apagar produto?")) await deleteDoc(doc(db, "products", id));
+        };
+
+        window.saveSettings = async () => {
+            const data = {
+                logo: document.getElementById('cfg-logo').value,
+                title: document.getElementById('cfg-title').value,
+                slogan: document.getElementById('cfg-slogan').value,
+                logoImg: window.currentLogoImg || window.settings.logoImg || ""
+            };
+            await setDoc(doc(db, "settings", "main"), data);
+            alert("Configurações Salvas!");
+        };
+
+        window.confirmOrder = async () => {
+            const name = document.getElementById('cust-name').value;
+            const phone = document.getElementById('cust-phone').value;
+            const addr = document.getElementById('cust-address').value;
+            if(!name || !phone || !addr) return alert("Preencha os dados!");
+
+            const orderData = { 
+                timestamp: serverTimestamp(),
+                date: new Date().toLocaleString(), 
+                customer: name, phone, address: addr,
+                items: [...window.cart] 
+            };
+            await addDoc(collection(db, "orders"), orderData);
+
+            let itensTexto = window.cart.map(i => `- ${i.name} (${i.price})`).join('%0A');
+            const msg = `🚀 *NOVO PEDIDO*%0A%0A*ITENS:*%0A${itensTexto}%0A%0A*CLIENTE:* ${name}%0A*ADDR:* ${addr}`;
+            window.location.href = `https://wa.me/258845478417?text=${msg}`; 
+            
+            window.cart = [];
+            updateCartUI();
+            closeSheets();
+        };
+
+        window.renderMarketplace = (filteredCat = 'Todos') => {
             const list = document.getElementById('product-list');
-            if(!list) return;
             list.innerHTML = '';
-            const displayProds = filteredCat === 'Todos' ? products : products.filter(p => p.cat === filteredCat);
-
+            const displayProds = filteredCat === 'Todos' ? window.products : window.products.filter(p => p.cat === filteredCat);
             displayProds.forEach(p => {
                 list.innerHTML += `
                     <div class="glass-product">
                         <div class="image-wrapper"><img src="${p.img || 'https://via.placeholder.com/150'}"></div>
                         <h2 style="font-size: 0.9rem;">${p.name}</h2>
                         <span class="mzn-price">${p.price}</span>
-                        <button class="buy-btn" onclick="addToCart(${p.id})">Adicionar</button>
+                        <button class="buy-btn" onclick="addToCart('${p.id}')">Adicionar</button>
                     </div>`;
             });
-
-            const uniqueCats = ['Todos', ...new Set(products.map(p => p.cat))];
+            const uniqueCats = ['Todos', ...new Set(window.products.map(p => p.cat))];
             document.getElementById('mkt-cats').innerHTML = uniqueCats.map(c => `
                 <button class="cat-item ${filteredCat === c ? 'active' : ''}" onclick="renderMarketplace('${c}')">${c}</button>
             `).join('');
-            
-            document.getElementById('mkt-logo').innerText = settings.logo;
-            document.getElementById('mkt-title').innerText = settings.title;
-            document.getElementById('mkt-slogan').innerText = settings.slogan;
-            if(settings.logoImg) document.getElementById('mkt-logo-img').src = settings.logoImg;
             updateDashboardStats();
-        }
+        };
 
-        function addToCart(id) {
-            const prod = products.find(p => p.id == id);
-            if(prod) {
-                cart.push(prod);
-                updateCartUI();
-            }
-        }
-
-        function updateCartUI() {
-            const container = document.getElementById('cart-items-container');
-            const badge = document.getElementById('cart-badge');
-            badge.innerText = cart.length;
-            
-            container.innerHTML = cart.map((item, index) => `
-                <div class="cart-item-row">
-                    <span>${item.name}</span>
-                    <span style="font-weight:700;">${item.price}</span>
-                    <i data-lucide="trash-2" size="16" onclick="removeFromCart(${index})" style="color:#ff4444; cursor:pointer;"></i>
-                </div>
-            `).join('');
-            
-            document.getElementById('cart-total').innerText = `Subtotal: ${cart.length} item(s)`;
-            lucide.createIcons();
-        }
-
-        function removeFromCart(index) {
-            cart.splice(index, 1);
-            updateCartUI();
-        }
-
-        function goToCheckout() {
-            if(cart.length === 0) return alert("Adicione produtos primeiro!");
-            closeSheets();
-            openSheet('checkout-sheet');
-        }
-
-        function confirmOrder() {
-            const name = document.getElementById('cust-name').value;
-            const phone = document.getElementById('cust-phone').value;
-            const addr = document.getElementById('cust-address').value;
-            const notes = document.getElementById('cust-notes').value;
-
-            if(!name || !phone || !addr) return alert("Preencha os dados de entrega.");
-
-            const orderData = { 
-                id: Date.now(), 
-                date: new Date().toLocaleString(), 
-                customer: name, 
-                phone: phone,
-                address: addr,
-                notes: notes,
-                items: [...cart] 
-            };
-            
-            history.push(orderData);
-            localStorage.setItem('goddid_history', JSON.stringify(history));
-
-            let itensTexto = cart.map(i => `- ${i.name} (${i.price})`).join('%0A');
-            const msg = `🚀 *NOVO PEDIDO - GODDID*%0A%0A*PRODUTOS:*%0A${itensTexto}%0A%0A*ENTREGA:*%0A*Nome:* ${name}%0A*Telefone:* ${phone}%0A*Endereço:* ${addr}%0A*Notas:* ${notes}`;
-            
-            window.location.href = `https://wa.me/258845478417?text=${msg}`; 
-
-            cart = [];
-            updateCartUI();
-            closeSheets();
-        }
-
-        function updateDashboardStats() {
-            const prodCount = document.getElementById('stat-prod-count');
-            const catCount = document.getElementById('stat-cat-count');
-            if(prodCount) prodCount.innerText = products.length;
-            if(catCount) {
-                const uniqueCats = [...new Set(products.map(p => p.cat))];
-                catCount.innerText = uniqueCats.length;
-            }
-        }
-
-        function startClock() {
-            setInterval(() => {
-                const now = new Date();
-                const clockEl = document.getElementById('admin-clock');
-                if(clockEl) clockEl.innerText = now.toLocaleTimeString('pt-PT', { hour12: false });
-            }, 1000);
-        }
-
-        document.getElementById('new-p-file').addEventListener('change', function(e) {
-            if(!e.target.files[0]) return;
-            const reader = new FileReader();
-            reader.onload = () => currentProductImg = reader.result;
-            reader.readAsDataURL(e.target.files[0]);
-        });
-
-        document.getElementById('cfg-file').addEventListener('change', function(e) {
-            if(!e.target.files[0]) return;
-            const reader = new FileReader();
-            reader.onload = () => currentLogoImg = reader.result;
-            reader.readAsDataURL(e.target.files[0]);
-        });
-
-        function addProduct() {
-            const name = document.getElementById('new-p-name').value;
-            const price = document.getElementById('new-p-price').value;
-            const cat = document.getElementById('new-p-cat').value || 'Geral';
-            if(!name || !price) return alert("Preencha o nome e preço!");
-            products.push({ id: Date.now(), name, price, cat, img: currentProductImg, stock: true });
-            localStorage.setItem('goddid_products', JSON.stringify(products));
-            renderAdminProducts(); renderMarketplace(); renderAdminCategories();
-            alert("Sucesso!");
-        }
-
-        function renderAdminProducts() {
-            document.getElementById('admin-product-list').innerHTML = products.map(p => `
+        window.renderAdminProducts = () => {
+            document.getElementById('admin-product-list').innerHTML = window.products.map(p => `
                 <div class="order-row">
                     <span style="font-size:0.8rem;">${p.name} <br><small>${p.cat}</small></span>
-                    <button class="btn-del" onclick="deleteProduct(${p.id})">Apagar</button>
+                    <button class="btn-del" onclick="deleteProduct('${p.id}')">Apagar</button>
                 </div>
             `).join('');
             updateDashboardStats();
-        }
+        };
 
-        function renderAdminCategories() {
-            const uniqueCats = [...new Set(products.map(p => p.cat))].filter(c => c !== 'Geral');
-            document.getElementById('admin-category-list').innerHTML = uniqueCats.map(c => `
-                <div class="order-row">
-                    <span style="font-size:0.8rem;">${c}</span>
-                    <button class="btn-del" onclick="deleteCategory('${c}')">Remover Cat</button>
-                </div>
-            `).join('');
-        }
-
-        function deleteCategory(catName) {
-            if(confirm(`Remover a categoria "${catName}"? Os produtos ficarão como "Geral".`)) {
-                products = products.map(p => {
-                    if(p.cat === catName) p.cat = 'Geral';
-                    return p;
-                });
-                localStorage.setItem('goddid_products', JSON.stringify(products));
-                renderAdminProducts(); renderMarketplace(); renderAdminCategories();
-            }
-        }
-
-        function renderHistory() {
+        window.renderHistory = () => {
             const container = document.getElementById('admin-history-list');
-            container.innerHTML = history.length ? history.map(h => `
+            container.innerHTML = window.historyData.length ? window.historyData.map(h => `
                 <div class="order-row" style="flex-direction:column; align-items:flex-start; gap: 5px;">
                     <div style="display:flex; justify-content:space-between; width:100%;">
-                         <span style="font-size:0.7rem; opacity:0.6;">${h.date}</span>
-                         <span style="font-size:0.7rem; font-weight:800; color:var(--orange);">${h.phone}</span>
+                        <span style="font-size:0.7rem; opacity:0.6;">${h.date}</span>
+                        <span style="font-size:0.7rem; font-weight:800; color:var(--orange);">${h.phone}</span>
                     </div>
-                    <span style="font-weight:700; font-size: 0.9rem;">${h.customer}</span>
-                    <span style="font-size:0.75rem;">📍 ${h.address}</span>
-                    <span style="font-size:0.75rem; opacity:0.8;">📝 ${h.notes || 'Sem notas'}</span>
-                    <div style="margin-top:5px; padding-top:5px; border-top:1px solid var(--border); width:100%; font-size:0.7rem;">
-                        ${h.items.map(i => `• ${i.name} (${i.price})`).join('<br>')}
-                    </div>
+                    <span style="font-weight:700;">${h.customer}</span>
+                    <div style="font-size:0.7rem;">${h.items.map(i => `• ${i.name}`).join('<br>')}</div>
                 </div>
-            `).reverse().join('') : '<p style="text-align:center; opacity:0.5;">Nenhum pedido ainda.</p>';
-        }
-
-        function clearHistory() { if(confirm("Apagar tudo?")) { history = []; localStorage.setItem('goddid_history', JSON.stringify(history)); renderHistory(); } }
-
-        function deleteProduct(id) {
-            products = products.filter(p => p.id !== id);
-            localStorage.setItem('goddid_products', JSON.stringify(products));
-            renderAdminProducts(); renderMarketplace(); renderAdminCategories();
-        }
-
-        function saveSettings() {
-            settings = { logo: document.getElementById('cfg-logo').value, title: document.getElementById('cfg-title').value, slogan: document.getElementById('cfg-slogan').value, logoImg: currentLogoImg };
-            localStorage.setItem('goddid_settings', JSON.stringify(settings));
-            renderMarketplace(); alert("Salvo!");
-        }
-
-        function login() {
-            if(document.getElementById('adm-user').value === '84 547 8417' && document.getElementById('adm-pass').value === 'admin123moz') {
-                document.getElementById('admin-view').style.display = 'block';
-                renderAdminProducts(); renderAdminCategories(); renderHistory();
-                closeSheets(); startClock();
-            } else alert("Erro!");
-        }
-
-        function switchAdminTab(tab, btn) {
-            document.querySelectorAll('.admin-tab').forEach(t => t.style.display = 'none');
-            const el = document.getElementById('tab-' + tab);
-            if(el) el.style.display = 'block';
-            if(tab === 'historico') renderHistory();
-            if(tab === 'produtos') renderAdminCategories();
-        }
-
-        function closeAdmin() { document.getElementById('admin-view').style.display = 'none'; }
-        function openSheet(id) { document.getElementById('body').classList.add('blurred'); document.getElementById(id).classList.add('active'); }
-        function closeSheets() { document.getElementById('body').classList.remove('blurred'); document.querySelectorAll('.sheet').forEach(s => s.classList.remove('active')); }
-        
-        function openWhatsAppSupport() { 
-            window.location.href = 'https://wa.me/258845478417'; 
-        }
-
-        window.onload = () => {
-            renderMarketplace();
-            document.getElementById('cfg-logo').value = settings.logo;
-            document.getElementById('cfg-title').value = settings.title;
-            document.getElementById('cfg-slogan').value = settings.slogan;
+            `).join('') : '<p>Sem pedidos.</p>';
         };
+
+        function applySettings() {
+            document.getElementById('mkt-logo').innerText = window.settings.logo;
+            document.getElementById('mkt-title').innerText = window.settings.title;
+            document.getElementById('mkt-slogan').innerText = window.settings.slogan;
+            if(window.settings.logoImg) document.getElementById('mkt-logo-img').src = window.settings.logoImg;
+            document.getElementById('cfg-logo').value = window.settings.logo;
+            document.getElementById('cfg-title').value = window.settings.title;
+            document.getElementById('cfg-slogan').value = window.settings.slogan;
+        }
+
+        document.getElementById('new-p-file').onchange = e => {
+            const reader = new FileReader();
+            reader.onload = () => window.currentProductImg = reader.result;
+            reader.readAsDataURL(e.target.files[0]);
+        };
+
+        document.getElementById('cfg-file').onchange = e => {
+            const reader = new FileReader();
+            reader.onload = () => window.currentLogoImg = reader.result;
+            reader.readAsDataURL(e.target.files[0]);
+        };
+
+        startClock();
     </script>
 
     <script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            const swCode = `
-                const CACHE_NAME = 'km-cell-v2';
-                const ASSETS = ['${window.location.href}', 'https://unpkg.com/lucide@latest'];
-                self.addEventListener('install', e => e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(ASSETS))));
-                self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));
-            `;
-            const blob = new Blob([swCode], { type: 'application/javascript' });
-            navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(() => {});
-        });
-    }
+        function updateCartUI() {
+            const badge = document.getElementById('cart-badge');
+            badge.innerText = window.cart.length;
+            document.getElementById('cart-items-container').innerHTML = window.cart.map((item, i) => `
+                <div class="cart-item-row">
+                    <span>${item.name}</span>
+                    <button onclick="removeFromCart(${i})" style="border:none; background:none; color:red;">X</button>
+                </div>
+            `).join('');
+            document.getElementById('cart-total').innerText = "Total: " + window.cart.length + " itens";
+        }
+
+        function removeFromCart(i) { window.cart.splice(i, 1); updateCartUI(); }
+        function addToCart(id) { const prod = window.products.find(p => p.id == id); if(prod) { window.cart.push(prod); updateCartUI(); } }
+        function openSheet(id) { document.getElementById('body').classList.add('blurred'); document.getElementById(id).classList.add('active'); }
+        function closeSheets() { document.getElementById('body').classList.remove('blurred'); document.querySelectorAll('.sheet').forEach(s => s.classList.remove('active')); }
+        function toggleTheme() { 
+            document.body.classList.toggle('dark-mode');
+            const icon = document.getElementById('theme-icon');
+            icon.setAttribute('data-lucide', document.body.classList.contains('dark-mode') ? 'sun' : 'moon');
+            lucide.createIcons();
+        }
+        function startClock() { setInterval(() => { const el = document.getElementById('admin-clock'); if(el) el.innerText = new Date().toLocaleTimeString(); }, 1000); }
+        
+        function login() {
+            const user = document.getElementById('adm-user').value;
+            const pass = document.getElementById('adm-pass').value;
+            if(user === 'kmcellshopp@gmail.com' && pass === 'admin123moz') {
+                document.getElementById('admin-view').style.display = 'block'; 
+                closeSheets();
+                lucide.createIcons();
+            } else {
+                alert("Dados incorretos!");
+            }
+        }
+
+        function switchAdminTab(tab) {
+            document.querySelectorAll('.admin-tab').forEach(t => t.style.display = 'none');
+            document.getElementById('tab-' + tab).style.display = 'block';
+        }
+
+        function closeAdmin() { document.getElementById('admin-view').style.display = 'none'; }
+        function openWhatsAppSupport() { window.location.href = 'https://wa.me/258845478417'; }
+        function goToCheckout() { if(window.cart.length > 0) { closeSheets(); openSheet('checkout-sheet'); } else alert("Carrinho vazio!"); }
+        
+        function updateDashboardStats() {
+            if(document.getElementById('stat-prod-count')) {
+                document.getElementById('stat-prod-count').innerText = window.products.length;
+                const cats = [...new Set(window.products.map(p => p.cat))];
+                document.getElementById('stat-cat-count').innerText = cats.length;
+            }
+        }
+        
+        lucide.createIcons();
     </script>
 </body>
 </html>
